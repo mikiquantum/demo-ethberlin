@@ -1,0 +1,92 @@
+stages:
+  - checks
+  - migrate_test
+  - build_sources_test
+  - deploy_test
+  - sanity_test
+  - migrate_staging
+  - build_sources_staging
+  - deploy_staging
+  - sanity_staging
+
+checks_test:
+  stage: checks
+  image: node:9.11
+  script:
+    - echo "Running truffle tests"
+
+checks_coverage:
+  stage: checks
+  image: node:9.11
+  script:
+    - echo "Running test coverage"
+
+checks_linter:
+  stage: checks
+  image: node:9.11
+  script:
+    - echo "Running solidity linter"
+
+checks_security:
+  stage: checks
+  image: node:9.11
+  script:
+    - echo "Running Security Analysis"
+
+checks_dryrun:
+  stage: checks
+  image: node:9.11
+  script:
+    - echo "Running migration dry-run against in memory eth"
+
+migrate_test:
+  stage: migrate_test
+  image: node:9.11
+  script:
+    - echo "Migrating Smart Contracts to Test Environment"
+
+build_sources_test:
+  stage: build_sources
+  image: node:9.11
+  script:
+    - echo "Building sources for Test Environment"
+
+deploy_test:
+  stage: deploy_test
+  image: alpine:3.7
+#  environment:
+#    name: test
+  script:
+    - echo "Deploying DApp to Test Environment"
+
+sanity_test:
+  stage: sanity_test
+  image: node:9.11
+  script:
+    - echo "Running Sanity Checks on Test Environment"
+
+migrate_staging:
+  stage: migrate_test
+  image: node:9.11
+  script:
+    - echo "Migrating Smart Contracts to Staging Environment"
+
+build_sources_staging:
+  stage: build_sources
+  image: node:9.11
+  script:
+    - echo "Building sources for Staging Environment"
+
+deploy_staging:
+  stage: deploy_staging
+  image: alpine:3.7
+#  environment:
+#    name: staging
+  script:
+    - echo "Deploying DApp to Staging Environment"
+
+sanity_staging:
+  stage: sanity_test
+  image: node:9.11
+  script:
+    - echo "Running Sanity Checks on Staging Environment"
