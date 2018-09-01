@@ -46,7 +46,7 @@ migrate_test:
     - echo "Migrating Smart Contracts to Test Environment"
 
 build_sources_test:
-  stage: build_sources
+  stage: build_sources_test
   image: node:9.11
   script:
     - echo "Building sources for Test Environment"
@@ -66,13 +66,13 @@ sanity_test:
     - echo "Running Sanity Checks on Test Environment"
 
 migrate_staging:
-  stage: migrate_test
+  stage: migrate_staging
   image: node:9.11
   script:
     - echo "Migrating Smart Contracts to Staging Environment"
 
 build_sources_staging:
-  stage: build_sources
+  stage: build_sources_staging
   image: node:9.11
   script:
     - echo "Building sources for Staging Environment"
@@ -86,7 +86,7 @@ deploy_staging:
     - echo "Deploying DApp to Staging Environment"
 
 sanity_staging:
-  stage: sanity_test
+  stage: sanity_staging
   image: node:9.11
   script:
     - echo "Running Sanity Checks on Staging Environment"
