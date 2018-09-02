@@ -1,5 +1,6 @@
 stages:
   - checks
+  - security
   - migrate_test
   - build_sources_test
   - deploy_test
@@ -31,6 +32,9 @@ check_test:
     - npm run test
     - pkill -f ganache-cli
     - cd client && npm run test && cd ../
+  artifacts:
+    paths:
+      - build/
 
 check_coverage:
   stage: checks
@@ -48,18 +52,16 @@ check_linter:
     - echo "Running solidity linter"
     - solhint "contracts/**/*.sol"
 
-check_security:
-  stage: checks
-  image: node:9.11
+security:
+  stage: security
+  image: docker:stable
   cache: {}
   services:
-    - docker
-  before_script:
-    - npm install
-    - npm install -g truffle@4.1.13
+    - docker:dind
   script:
-    - truffle compile
     - docker run -v $(pwd):/tmp -w "/tmp/" mythril/myth --truffle
+  dependencies:
+    - check_test
 
 migrate_test:
   stage: migrate_test
