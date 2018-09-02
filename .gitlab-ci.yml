@@ -12,7 +12,6 @@ stages:
 cache:
   paths:
     - node_modules/
-    - build/
 
 checks_test:
   stage: checks
@@ -25,7 +24,10 @@ checks_test:
     - echo "Running truffle tests"
     - truffle compile
     - npm run ganache > /dev/null 2>&1 &
-    - npm run test && pkill -f ganache-cli
+    - sleep 10
+    - truffle migrate --network ganache
+    - npm run test
+    - pkill -f ganache-cli
 
 checks_coverage:
   stage: checks
