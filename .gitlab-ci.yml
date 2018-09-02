@@ -32,6 +32,9 @@ check_test:
     - npm run test
     - pkill -f ganache-cli
     - cd client && npm run test && cd ../
+  artifacts:
+    paths:
+      - build/
 
 check_coverage:
   stage: checks
@@ -47,14 +50,13 @@ check_linter:
 
 security:
   stage: security
-  image: mythril/myth
+  image: docker:stable
+  services:
+    - docker:dind
   script:
-    - --truffle
+    - docker run -v $(pwd):/tmp -w "/tmp/" mythril/myth --truffle
   dependencies:
     - check_test
-  artifacts:
-    paths:
-      - build/
 
 migrate_test:
   stage: migrate_test
