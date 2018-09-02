@@ -23,11 +23,12 @@ checks_test:
   script:
     - echo "Running truffle tests"
     - truffle compile
-    - npm run ganache > /dev/null 2>&1 &
+    - npm run ganache &
     - sleep 10
     - truffle migrate --network ganache
     - npm run test
     - pkill -f ganache-cli
+    - cd client && npm run test && cd ../
 
 checks_coverage:
   stage: checks
