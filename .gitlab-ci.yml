@@ -9,6 +9,11 @@ stages:
   - deploy_staging
   - sanity_staging
 
+cache:
+  paths:
+    - node_modules/
+    - build/
+
 checks_test:
   stage: checks
   image: node:9.11
@@ -21,7 +26,6 @@ checks_test:
     - truffle compile
     - npm run ganache > /dev/null 2>&1 &
     - npm run test && pkill -f ganache-cli
-    - cd client && npm run link-contracts && npm test && cd ../
 
 checks_coverage:
   stage: checks
