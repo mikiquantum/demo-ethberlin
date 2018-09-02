@@ -14,6 +14,7 @@ checks_test:
   image: node:9.11
   before_script:
     - npm install
+    - cd client && npm install && cd ../
     - npm install -g truffle@4.1.13
   script:
     - echo "Running truffle tests"
