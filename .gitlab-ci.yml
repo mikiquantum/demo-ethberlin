@@ -1,5 +1,6 @@
 stages:
   - checks
+  - security
   - migrate_test
   - build_sources_test
   - deploy_test
@@ -12,8 +13,9 @@ stages:
 cache:
   paths:
     - node_modules/
+    - client/node_modules/
 
-checks_test:
+check_test:
   stage: checks
   image: node:9.11
   before_script:
@@ -31,29 +33,28 @@ checks_test:
     - pkill -f ganache-cli
     - cd client && npm run test && cd ../
 
-checks_coverage:
+check_coverage:
   stage: checks
   image: node:9.11
   script:
     - echo "Running test coverage"
 
-checks_linter:
+check_linter:
   stage: checks
   image: node:9.11
   script:
     - echo "Running solidity linter"
 
-checks_security:
-  stage: checks
-  image: node:9.11
+security:
+  stage: security
+  image: mythril/myth
   script:
-    - echo "Running Security Analysis"
-
-checks_dryrun:
-  stage: checks
-  image: node:9.11
-  script:
-    - echo "Running migration dry-run against in memory eth"
+    - --truffle
+  dependencies:
+    - check_test
+  artifacts:
+    paths:
+      - build/
 
 migrate_test:
   stage: migrate_test
