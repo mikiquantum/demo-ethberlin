@@ -45,12 +45,16 @@ check_coverage:
 check_linter:
   stage: checks
   image: node:9.11
+  before_script:
+    - npm install -g solhint
   script:
     - echo "Running solidity linter"
+    - solhint "contracts/**/*.sol"
 
 security:
   stage: security
   image: docker:stable
+  cache: {}
   services:
     - docker:dind
   script:
