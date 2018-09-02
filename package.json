@@ -1,0 +1,16 @@
+{
+  "name": "demo-ethberlin",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "ethereumjs-wallet": "^0.6.2",
+    "truffle-wallet-provider": "0.0.5"
+  },
+  "scripts": {
+    "test": "truffle test --network ganache",
+    "ganache": "ganache-cli --gasLimit 4712388 --networkId 99999 -p 8545 -m \"tumble gas embody bright agree pony smoke laptop index sight shallow hungry\""
+  },
+  "devDependencies": {
+    "json-loader": "0.5.4"
+  }
+}

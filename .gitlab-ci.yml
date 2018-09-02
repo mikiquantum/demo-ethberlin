@@ -12,8 +12,15 @@ stages:
 checks_test:
   stage: checks
   image: node:9.11
+  before_script:
+    - npm install
+    - npm install -g truffle@4.1.13
   script:
     - echo "Running truffle tests"
+    - truffle compile
+    - npm run ganache > /dev/null 2>&1 &
+    - npm run test && pkill -f ganache-cli
+    - cd client && npm run link-contracts && npm test && cd ../
 
 checks_coverage:
   stage: checks

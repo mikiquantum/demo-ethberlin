@@ -1,0 +1,17 @@
+build
+
+# Misc
+__generated__
+.DS_Store
+
+# VS Code
+.vscode/*
+!.vscode/snippets
+!.vscode/settings.json
+
+# GoLand IDE
+.idea
+
+# node
+node_modules/
+client/node_modules/
