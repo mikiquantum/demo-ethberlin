@@ -20,11 +20,12 @@ checks_test:
     - npm install
     - cd client && npm install && cd ../
     - npm install -g truffle@4.1.13
+    - npm install -g ganache-cli@6.1.6
   script:
     - echo "Running truffle tests"
     - truffle compile
-    - npm run ganache &
-    - sleep 10
+    - npm run ganache > /dev/null 2>&1 &
+    - sleep 5
     - truffle migrate --network ganache
     - npm run test
     - pkill -f ganache-cli
