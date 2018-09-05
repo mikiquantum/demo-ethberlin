@@ -1,5 +1,6 @@
 stages:
   - checks
+  - security
   - migrate_test
   - build_sources_test
   - deploy_test
@@ -52,13 +53,15 @@ check_linter:
     - solhint "contracts/**/*.sol"
 
 check_security:
-  stage: checks
+  stage: security
   image: docker:stable
   cache: {}
   services:
     - docker:dind
   script:
     - docker run -v $(pwd):/tmp -w "/tmp/" mythril/myth --truffle
+  dependencies:
+    - check_test
 
 migrate_test:
   stage: migrate_test
