@@ -75,6 +75,9 @@ migrate_test:
   before_script:
     - npm install
     - npm install -g truffle@4.1.13
+  variables:
+    PROVIDER_ENDPOINT: $PROVIDER_TEST_ENDPOINT
+    ETH_ACCOUNT: $ETH_TEST_ACCOUNT
   script:
     - truffle migrate --network test
   artifacts:
