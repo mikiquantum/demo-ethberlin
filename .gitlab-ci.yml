@@ -96,11 +96,12 @@ build_sources_review:
     - cd client
     - npm run link-contracts
     - npm run build
+    - cd ../
   dependencies:
     - migrate_test
   artifacts:
     paths:
-      - build_webpack/
+      - client/build_webpack/
   except:
     - master
 
