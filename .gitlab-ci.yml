@@ -72,12 +72,13 @@ check_security:
 migrate_test:
   stage: migrate_test
   image: node:9.11
+  cache: {}
   before_script:
     - npm install
     - npm install -g truffle@4.1.13
   script:
     - export PROVIDER_ENDPOINT=$PROVIDER_TEST_ENDPOINT
-    - export ETH_ACCOUNT=$$ETH_TEST_ACCOUNT
+    - export ETH_ACCOUNT=$ETH_TEST_ACCOUNT
     - truffle migrate --network test
   artifacts:
     paths:
