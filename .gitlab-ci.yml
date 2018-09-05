@@ -35,6 +35,9 @@ check_test:
     - cd client && npm run test && cd ../
   except:
     - master
+  artifacts:
+    paths:
+      - build/
 
 check_coverage:
   stage: checks
@@ -90,6 +93,8 @@ build_sources_review:
   stage: build_sources_review
   image: node:9.11
   script:
+    - cd client
+    - npm run link-contracts
     - npm run build
   dependencies:
     - migrate_test
@@ -158,6 +163,8 @@ migrate_staging:
     - npm install
     - npm install -g truffle@4.1.13
   script:
+    - export PROVIDER_ENDPOINT=$PROVIDER_STAGING_ENDPOINT
+    - export ETH_ACCOUNT=$ETH_STAGING_ACCOUNT
     - truffle migrate --network staging
   artifacts:
     paths:
