@@ -101,7 +101,7 @@ build_sources_review:
     - migrate_test
   artifacts:
     paths:
-      - client/build_webpack/
+      - client/build/
   except:
     - master
 
@@ -179,7 +179,10 @@ build_sources_staging:
   stage: build_sources_staging
   image: node:9.11
   script:
-    - npm run build
+   - cd client
+   - npm run link-contracts
+   - npm run build
+   - cd ../
   dependencies:
     - migrate_staging
   only:
@@ -187,7 +190,7 @@ build_sources_staging:
       - master
   artifacts:
     paths:
-      - build_webpack/
+      - client/build/
 
 build_docker_staging:
   stage: build_docker_staging
