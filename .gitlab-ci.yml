@@ -2,13 +2,13 @@ stages:
   - checks
   - security
   - migrate_test
-  - build_sources_test
-  - deploy_test
-  - sanity_test
+  - build_sources_review
+  - build_docker_review
+  - review
+  - cleanup
   - migrate_staging
   - build_sources_staging
   - deploy_staging
-  - sanity_staging
 
 cache:
   paths:
@@ -32,15 +32,16 @@ check_test:
     - npm run test
     - pkill -f ganache-cli
     - cd client && npm run test && cd ../
-  artifacts:
-    paths:
-      - build/
+  except:
+    - master
 
 check_coverage:
   stage: checks
   image: node:9.11
   script:
     - echo "Running test coverage"
+  except:
+    - master
 
 check_linter:
   stage: checks
@@ -51,6 +52,8 @@ check_linter:
   script:
     - echo "Running solidity linter"
     - solhint "contracts/**/*.sol"
+  except:
+    - master
 
 check_security:
   stage: security
@@ -62,55 +65,167 @@ check_security:
     - docker run -v $(pwd):/tmp -w "/tmp/" mythril/myth --truffle
   dependencies:
     - check_test
+  except:
+    - master
 
 migrate_test:
   stage: migrate_test
   image: node:9.11
+  before_script:
+    - npm install
+    - npm install -g truffle@4.1.13
   script:
-    - echo "Migrating Smart Contracts to Test Environment"
+    - truffle migrate --network test
+  artifacts:
+    paths:
+      - build/
+  except:
+    - master
 
-build_sources_test:
-  stage: build_sources_test
+build_sources_review:
+  stage: build_sources_review
   image: node:9.11
   script:
-    - echo "Building sources for Test Environment"
+    - npm run build
+  dependencies:
+    - migrate_test
+  artifacts:
+    paths:
+      - build_webpack/
+  except:
+    - master
 
-deploy_test:
-  stage: deploy_test
-  image: alpine:3.7
-#  environment:
-#    name: test
+build_docker_review:
+  stage: build_docker_review
+  image: docker:stable
+  cache: {}
+  services:
+    - docker:dind
+  dependencies:
+    - build_sources_review
   script:
-    - echo "Deploying DApp to Test Environment"
+    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com
+    - docker build -t registry.gitlab.com/$CI_PROJECT_PATH:$CI_COMMIT_REF_SLUG .
+    - docker push registry.gitlab.com/$CI_PROJECT_PATH:$CI_COMMIT_REF_SLUG
+  except:
+    - master
 
-sanity_test:
-  stage: sanity_test
-  image: node:9.11
+review:
+  stage: review
+  image: roffe/kubectl
   script:
-    - echo "Running Sanity Checks on Test Environment"
+    - setup_kubernetes
+    - deploy
+  environment:
+    name: review/$CI_COMMIT_REF_NAME
+    url: http://$CI_ENVIRONMENT_SLUG.$PROJECT_DOMAIN
+    on_stop: stop_review
+  only:
+    refs:
+      - branches
+    kubernetes: active
+  except:
+    - master
+
+stop_review:
+  stage: cleanup
+  image: roffe/kubectl
+  variables:
+    GIT_STRATEGY: none
+  script:
+    - setup_kubernetes
+    - delete
+  environment:
+    name: review/$CI_COMMIT_REF_NAME
+    action: stop
+  when: manual
+  allow_failure: true
+  only:
+    refs:
+      - branches
+    kubernetes: active
+  except:
+    - master
 
 migrate_staging:
   stage: migrate_staging
   image: node:9.11
+  before_script:
+    - npm install
+    - npm install -g truffle@4.1.13
   script:
-    - echo "Migrating Smart Contracts to Staging Environment"
+    - truffle migrate --network staging
+  artifacts:
+    paths:
+      - build/
+  when: manual
+  only:
+    refs:
+      - master
 
 build_sources_staging:
   stage: build_sources_staging
   image: node:9.11
   script:
-    - echo "Building sources for Staging Environment"
+    - npm run build
+  dependencies:
+    - migrate_staging
+  only:
+    refs:
+      - master
+  artifacts:
+    paths:
+      - build_webpack/
+
+build_docker_staging:
+  stage: build_docker_staging
+  image: docker:stable
+  cache: {}
+  services:
+    - docker:dind
+  dependencies:
+    - build_sources_staging
+  script:
+    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com
+    - docker build -t registry.gitlab.com/$CI_PROJECT_PATH:$CI_COMMIT_REF_SLUG .
+    - docker push registry.gitlab.com/$CI_PROJECT_PATH:$CI_COMMIT_REF_SLUG
 
 deploy_staging:
   stage: deploy_staging
-  image: alpine:3.7
-#  environment:
-#    name: staging
+  image: roffe/kubectl
   script:
-    - echo "Deploying DApp to Staging Environment"
+    - setup_kubernetes
+    - deploy
+  environment:
+    name: staging
+    url: http://staging.$PROJECT_DOMAIN
+  only:
+    refs:
+      - master
+    kubernetes: active
 
-sanity_staging:
-  stage: sanity_staging
-  image: node:9.11
-  script:
-    - echo "Running Sanity Checks on Staging Environment"
+
+# ---------------------------------------------------------------------------
+.auto_devops: &auto_devops |
+  export DEPLOYMENT_DOMAIN=$(echo $CI_ENVIRONMENT_URL | awk -F/ '{print $3}')
+
+  # Deployment-related variables and functions
+  function setup_kubernetes() {
+    kubectl config set-cluster "$CI_PROJECT_ID" --server="$KUBE_URL" --certificate-authority="$KUBE_CA_PEM_FILE"
+    kubectl config set-credentials "$CI_PROJECT_ID" --token="$KUBE_TOKEN"
+    kubectl create namespace "$KUBE_NAMESPACE" -o yaml --dry-run | kubectl apply -f -
+    kubectl config set-context "$CI_PROJECT_ID" --cluster="$CI_PROJECT_ID" --user="$CI_PROJECT_ID" --namespace="$KUBE_NAMESPACE"
+    kubectl config use-context "$CI_PROJECT_ID"
+    kubectl create secret docker-registry registry.gitlab.com --docker-server="$CI_REGISTRY" --docker-username="$CI_REGISTRY_USER" --docker-password="$CI_REGISTRY_PASSWORD" -o yaml --dry-run | kubectl apply -f -
+  }
+
+  function deploy() {
+    cat ./deployment.template.yml | envsubst | kubectl apply -f -
+  }
+
+  function delete() {
+    cat ./deployment.template.yml | envsubst | kubectl delete -f -
+  }
+
+before_script:
+  - *auto_devops
