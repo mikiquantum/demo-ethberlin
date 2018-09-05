@@ -8,6 +8,7 @@ stages:
   - cleanup
   - migrate_staging
   - build_sources_staging
+  - build_docker_staging
   - deploy_staging
 
 cache:
