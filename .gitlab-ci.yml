@@ -16,6 +16,17 @@ cache:
     - node_modules/
     - client/node_modules/
 
+check_dummy:
+  stage: checks
+  image: node:9.11
+  variables:
+    ABCD: "HEY"
+    PROVIDER_ENDPOINT: "${PROVIDER_TEST_ENDPOINT}"
+  script:
+    - echo "A${ABCD}Z"
+    - echo "A${PROVIDER_TEST_ENDPOINT}Z"
+    - echo "A${PROVIDER_ENDPOINT}Z"
+
 check_test:
   stage: checks
   image: node:9.11
