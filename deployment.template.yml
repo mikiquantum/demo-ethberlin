@@ -1,0 +1,48 @@
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: $CI_ENVIRONMENT_SLUG-backend
+spec:
+  replicas: $REPLICAS
+  template:
+    metadata:
+      labels:
+        app: $CI_ENVIRONMENT_SLUG
+        component: backend
+    spec:
+      containers:
+        - name: $CI_ENVIRONMENT_SLUG-backend
+          image: registry.gitlab.com/$CI_PROJECT_PATH:$CI_COMMIT_REF_SLUG
+          imagePullPolicy: Always
+          ports:
+          - containerPort: 80
+      imagePullSecrets:
+        - name: registry.gitlab.com
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: $CI_ENVIRONMENT_SLUG-service
+spec:
+  selector:
+    app: $CI_ENVIRONMENT_SLUG
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+      protocol: TCP
+  type: NodePort
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: $CI_ENVIRONMENT_SLUG-ingress
+spec:
+  rules:
+  - host: $DEPLOYMENT_DOMAIN
+    http:
+      paths:
+      - backend:
+          serviceName: $CI_ENVIRONMENT_SLUG-service
+          servicePort: http
